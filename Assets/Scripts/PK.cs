@@ -73,7 +73,11 @@ namespace PK
     {
         public const float ANIMATION_SPEED_MULTIPLIER = 1f;
 
-        public const float MAP_CHUNK_SIZE = 30f;
+        public const float MAP_CHUNK_SIZE = 10f;
         public const int MAP_CHUNK_AMOUNT = 5;
+        public const string MAP_CHUNK_UNDEFINED = "00";
+
+        public const string TILE_PERMISSION_NONE  = "tilePermission_0";
+        public const string TILE_PERMISSION_WALKABLE  = "tilePermission_1";
     }
 }

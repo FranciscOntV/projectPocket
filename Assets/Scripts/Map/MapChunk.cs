@@ -7,6 +7,14 @@ namespace PK
 {
     public class MapChunk : MonoBehaviour
     {
-        public Tilemap permissionLayer; 
+        public Coordinate X = Coordinate.A;
+        public Coordinate Y = Coordinate.B;
+
+        public Tilemap permissionLayer;
+
+        public string Coords()
+        {
+            return $"{X.ToString()}{Y.ToString()}";
+        }
     }
 }

@@ -5,6 +5,7 @@ using UnityEditor;
 
 namespace PK
 {
+    [RequireComponent(typeof(ChunkRegistry))]
     public class MapChunkManager : MonoBehaviour
     {
         public Transform player;
@@ -14,7 +15,8 @@ namespace PK
         private Vector2 playerChunkBorder;
 
         public MapChunk currentChunk;
-        public MapChunk[] adjacentChunks = new MapChunk[8];
+
+        private ChunkRegistry registry;
 
         void OnDrawGizmos()
         {
@@ -59,12 +61,98 @@ namespace PK
             {
                 Destroy(gameObject);
             }
+            registry = GetComponent<ChunkRegistry>();
         }
 
         // Update is called once per frame
         void Update()
         {
             playerChunkPosition = CalculateChunk(player.position);
+        }
+
+        public void ActivateAdjacentChunks(MapChunk current)
+        {
+            if (!currentChunk)
+            {
+                currentChunk = current;
+                for (int x = (int)current.X - 1; x <= (int)current.X + 1; x++)
+                {
+                    MapChunk next;
+                    // Enable chunks
+                    int posY = (int)current.Y;
+                    next = registry.GetChunk(new Vector2Int(x, posY - 1));
+                    if (next) next.gameObject.SetActive(true);
+                    next = registry.GetChunk(new Vector2Int(x, posY));
+                    if (next) next.gameObject.SetActive(true);
+                    next = registry.GetChunk(new Vector2Int(x, posY + 1));
+                    if (next) next.gameObject.SetActive(true);
+
+                }
+            }
+            // Moved Horizontally to a new chunk
+            else if (current.X != currentChunk.X)
+            {
+                int chunkOffsetX = 1;
+                // Moved Left
+                if (current.X < currentChunk.X)
+                    chunkOffsetX = -1;
+                Debug.Log(chunkOffsetX < 0 ? "Scroll LEFT" : "Scroll RIGHT");
+                MapChunk next;
+                // Enable chunks
+                int posX = (int)current.X + chunkOffsetX;
+                int posY = (int)current.Y;
+                next = registry.GetChunk(new Vector2Int(posX, posY - 1));
+                if (next) next.gameObject.SetActive(true);
+                next = registry.GetChunk(new Vector2Int(posX, posY));
+                if (next) next.gameObject.SetActive(true);
+                next = registry.GetChunk(new Vector2Int(posX, posY + 1));
+                if (next) next.gameObject.SetActive(true);
+
+                posX = (int)currentChunk.X - chunkOffsetX;
+                // Disable chunks
+                next = registry.GetChunk(new Vector2Int(posX, posY - 1));
+                if (next) next.gameObject.SetActive(false);
+                next = registry.GetChunk(new Vector2Int(posX, posY));
+                if (next) next.gameObject.SetActive(false);
+                next = registry.GetChunk(new Vector2Int(posX, posY + 1));
+                if (next) next.gameObject.SetActive(false);
+
+            }
+            // Moved Horizontally to a new chunk
+            else if (current.Y != currentChunk.Y)
+            {
+                int chunkOffsetY = 1;
+                // Moved Up
+                if (current.Y < currentChunk.Y)
+                    chunkOffsetY = -1;
+                Debug.Log(chunkOffsetY < 0 ? "Scroll UP" : "Scroll DOWN");
+                MapChunk next;
+                // Enable chunks
+                int posX = (int)current.X;
+                int posY = (int)current.Y + chunkOffsetY;
+                next = registry.GetChunk(new Vector2Int(posX - 1, posY));
+                if (next) next.gameObject.SetActive(true);
+                next = registry.GetChunk(new Vector2Int(posX, posY));
+                if (next) next.gameObject.SetActive(true);
+                next = registry.GetChunk(new Vector2Int(posX + 1, posY));
+                if (next) next.gameObject.SetActive(true);
+
+                posY = (int)currentChunk.Y - chunkOffsetY;
+                // Disable chunks
+                next = registry.GetChunk(new Vector2Int(posX - 1, posY));
+                if (next) next.gameObject.SetActive(false);
+                next = registry.GetChunk(new Vector2Int(posX, posY));
+                if (next) next.gameObject.SetActive(false);
+                next = registry.GetChunk(new Vector2Int(posX + 1, posY));
+                if (next) next.gameObject.SetActive(false);
+            }
+            currentChunk = current;
+        }
+
+        public static MapChunk GetChunkAt(Vector3 position)
+        {
+            Vector2Int chunk = _.CalculateChunk(position);
+            return _.registry.GetChunk(chunk);
         }
 
         public Vector2Int CalculateChunk(Vector3 position)

@@ -22,6 +22,7 @@ namespace PK
         private bool stepping = false;
 
         // Movement Vars
+        private MapChunk currentChunk;
         private Vector3 targetPosition;
         private bool stopAnimation = false;
         private bool canMove = true;
@@ -32,6 +33,8 @@ namespace PK
             animationTimer.onFinish += NextStep;
             animationTimer.Start();
             targetPosition = transform.position;
+            currentChunk = MapChunkManager.GetChunkAt(transform.position);
+            MapChunkManager._.ActivateAdjacentChunks(currentChunk);
         }
 
         // Update is called once per frame
@@ -65,7 +68,8 @@ namespace PK
             animationTimer.Reset(true);
         }
 
-        public void Move(Vector2Int direction) {
+        public void Move(Vector2Int direction)
+        {
             stopAnimation = false;
             if (direction == Vector2Int.up) MoveUp();
             else if (direction == Vector2Int.down) MoveDown();
@@ -78,7 +82,11 @@ namespace PK
         {
             if (moving) return;
             facing = Facing.Up;
-            // if (FrontBlocked(Vector3.forward)) return;
+            if (DestinationBlocked(transform.position + Vector3.up))
+            {
+                stopAnimation = true;
+                return;
+            }
             targetPosition += Vector3.up;
             StartCoroutine("PerformMovement");
         }
@@ -87,7 +95,11 @@ namespace PK
         {
             if (moving) return;
             facing = Facing.Down;
-            // if (FrontBlocked(Vector3.back)) return;
+            if (DestinationBlocked(transform.position + Vector3.down))
+            {
+                stopAnimation = true;
+                return;
+            }
             targetPosition += Vector3.down;
             StartCoroutine("PerformMovement");
         }
@@ -96,7 +108,11 @@ namespace PK
         {
             if (moving) return;
             facing = Facing.Left;
-            // if (FrontBlocked(Vector3.left)) return;
+            if (DestinationBlocked(transform.position + Vector3.left))
+            {
+                stopAnimation = true;
+                return;
+            }
             targetPosition += Vector3.left;
             StartCoroutine("PerformMovement");
         }
@@ -105,7 +121,11 @@ namespace PK
         {
             if (moving) return;
             facing = Facing.Right;
-            // if (FrontBlocked(Vector3.right)) return;
+            if (DestinationBlocked(transform.position + Vector3.right))
+            {
+                stopAnimation = true;
+                return;
+            }
             targetPosition += Vector3.right;
             StartCoroutine("PerformMovement");
         }
@@ -115,11 +135,24 @@ namespace PK
             stopAnimation = true;
         }
 
-        private bool IsFrontBlocked(Vector3 position)
+        private bool DestinationBlocked(Vector3 position)
         {
-            Tilemap M;
-            // TileBase = M.get
-            return false;
+            bool blocked = false;
+            MapChunk chunk = MapChunkManager.GetChunkAt(position);
+            if (!chunk)
+                return true;
+            Vector3Int tilePosition = chunk.permissionLayer.WorldToCell(position);
+            TileBase tile = chunk.permissionLayer.GetTile(tilePosition);
+
+            blocked = tile.name != Constants.TILE_PERMISSION_WALKABLE;
+
+            if (!blocked && chunk != currentChunk)
+            {
+                currentChunk = chunk;
+                MapChunkManager._.ActivateAdjacentChunks(currentChunk);
+            }
+
+            return blocked;
         }
 
         private IEnumerator PerformMovement()
