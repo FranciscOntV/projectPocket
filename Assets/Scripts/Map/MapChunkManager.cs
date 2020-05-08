@@ -11,10 +11,7 @@ namespace PK
         public Transform player;
         public static MapChunkManager _;
 
-        private Vector2Int playerChunkPosition;
-        private Vector2 playerChunkBorder;
-
-        public MapChunk currentChunk;
+        public ChunkGrid loadedChunks = new ChunkGrid();
 
         private ChunkRegistry registry;
 
@@ -23,9 +20,9 @@ namespace PK
             float x = .5f;
             float y = Constants.MAP_CHUNK_SIZE * (float)Constants.MAP_CHUNK_AMOUNT + .5f;
             // Vertical lines
+            Gizmos.color = Color.red;
             for (int n = 0; n <= Constants.MAP_CHUNK_AMOUNT; n++)
             {
-                Gizmos.color = Color.white;
                 Vector2 pos1 = new Vector2(x, 0.5f);
                 Vector2 pos2 = new Vector2(x, y);
                 Gizmos.DrawLine(pos1, pos2);
@@ -36,18 +33,11 @@ namespace PK
             // Horizontal
             for (int m = 0; m <= Constants.MAP_CHUNK_AMOUNT; m++)
             {
-                Gizmos.color = Color.white;
                 Vector2 pos3 = new Vector2(0.5f, y);
                 Vector2 pos4 = new Vector2(x, y);
                 Gizmos.DrawLine(pos3, pos4);
                 y += Constants.MAP_CHUNK_SIZE;
             }
-        }
-
-        void OnGUI()
-        {
-            GUI.color = Color.black;
-            GUI.Label(new Rect(16, 16, 200, 24), "Position: " + playerChunkPosition.ToString());
         }
 
         private void Awake()
@@ -67,92 +57,109 @@ namespace PK
         // Update is called once per frame
         void Update()
         {
-            playerChunkPosition = CalculateChunk(player.position);
         }
 
-        public void ActivateAdjacentChunks(MapChunk current)
+        public void LoadAllChunks(Vector3 position)
         {
-            if (!currentChunk)
+            Vector2Int chunkPosition = _.CalculateChunk(position);
+
+            chunkPosition.x -= 1;
+            chunkPosition.y -= 1;
+            loadedChunks.topLeft = LoadChunk(chunkPosition);
+            chunkPosition.x += 1;
+            loadedChunks.topCenter = LoadChunk(chunkPosition);
+            chunkPosition.x += 1;
+            loadedChunks.topRight = LoadChunk(chunkPosition);
+            chunkPosition.y += 1;
+            chunkPosition.x -= 2;
+
+            loadedChunks.midLeft = LoadChunk(chunkPosition);
+            chunkPosition.x += 1;
+            loadedChunks.midCenter = LoadChunk(chunkPosition);
+            chunkPosition.x += 1;
+            loadedChunks.midRight = LoadChunk(chunkPosition);
+            chunkPosition.y += 1;
+            chunkPosition.x -= 2;
+            loadedChunks.lowLeft = LoadChunk(chunkPosition);
+            chunkPosition.x += 1;
+            loadedChunks.lowCenter = LoadChunk(chunkPosition);
+            chunkPosition.x += 1;
+            loadedChunks.lowRight = LoadChunk(chunkPosition);
+        }
+
+        public void PerformShift(Vector3 position, Vector3 direction)
+        {
+            Vector2Int pos = _.CalculateChunk(position);
+            if (direction == Vector3.up)
             {
-                currentChunk = current;
-                for (int x = (int)current.X - 1; x <= (int)current.X + 1; x++)
-                {
-                    MapChunk next;
-                    // Enable chunks
-                    int posY = (int)current.Y;
-                    next = registry.GetChunk(new Vector2Int(x, posY - 1));
-                    if (next) next.gameObject.SetActive(true);
-                    next = registry.GetChunk(new Vector2Int(x, posY));
-                    if (next) next.gameObject.SetActive(true);
-                    next = registry.GetChunk(new Vector2Int(x, posY + 1));
-                    if (next) next.gameObject.SetActive(true);
+                Debug.Log("Shift UP");
+                GameObject TL = LoadChunk(new Vector2Int(pos.x - 1, pos.y - 1));
+                GameObject TC = LoadChunk(new Vector2Int(pos.x, pos.y - 1));
+                GameObject TR = LoadChunk(new Vector2Int(pos.x + 1, pos.y - 1));
 
-                }
+                foreach (GameObject oldChunk in loadedChunks.ShiftUp(TL, TC, TR))
+                    Destroy(oldChunk);
             }
-            // Moved Horizontally to a new chunk
-            else if (current.X != currentChunk.X)
+
+            if (direction == Vector3.down)
             {
-                int chunkOffsetX = 1;
-                // Moved Left
-                if (current.X < currentChunk.X)
-                    chunkOffsetX = -1;
-                Debug.Log(chunkOffsetX < 0 ? "Scroll LEFT" : "Scroll RIGHT");
-                MapChunk next;
-                // Enable chunks
-                int posX = (int)current.X + chunkOffsetX;
-                int posY = (int)current.Y;
-                next = registry.GetChunk(new Vector2Int(posX, posY - 1));
-                if (next) next.gameObject.SetActive(true);
-                next = registry.GetChunk(new Vector2Int(posX, posY));
-                if (next) next.gameObject.SetActive(true);
-                next = registry.GetChunk(new Vector2Int(posX, posY + 1));
-                if (next) next.gameObject.SetActive(true);
+                Debug.Log("Shift DOWN");
+                GameObject LL = LoadChunk(new Vector2Int(pos.x - 1, pos.y + 1));
+                GameObject LC = LoadChunk(new Vector2Int(pos.x, pos.y + 1));
+                GameObject LR = LoadChunk(new Vector2Int(pos.x + 1, pos.y + 1));
 
-                posX = (int)currentChunk.X - chunkOffsetX;
-                // Disable chunks
-                next = registry.GetChunk(new Vector2Int(posX, posY - 1));
-                if (next) next.gameObject.SetActive(false);
-                next = registry.GetChunk(new Vector2Int(posX, posY));
-                if (next) next.gameObject.SetActive(false);
-                next = registry.GetChunk(new Vector2Int(posX, posY + 1));
-                if (next) next.gameObject.SetActive(false);
-
+                foreach (GameObject oldChunk in loadedChunks.ShiftDown(LL, LC, LR))
+                    Destroy(oldChunk);
             }
-            // Moved Horizontally to a new chunk
-            else if (current.Y != currentChunk.Y)
+
+            if (direction == Vector3.left)
             {
-                int chunkOffsetY = 1;
-                // Moved Up
-                if (current.Y < currentChunk.Y)
-                    chunkOffsetY = -1;
-                Debug.Log(chunkOffsetY < 0 ? "Scroll UP" : "Scroll DOWN");
-                MapChunk next;
-                // Enable chunks
-                int posX = (int)current.X;
-                int posY = (int)current.Y + chunkOffsetY;
-                next = registry.GetChunk(new Vector2Int(posX - 1, posY));
-                if (next) next.gameObject.SetActive(true);
-                next = registry.GetChunk(new Vector2Int(posX, posY));
-                if (next) next.gameObject.SetActive(true);
-                next = registry.GetChunk(new Vector2Int(posX + 1, posY));
-                if (next) next.gameObject.SetActive(true);
+                Debug.Log("Shift LEFT");
+                GameObject TL = LoadChunk(new Vector2Int(pos.x - 1, pos.y - 1));
+                GameObject ML = LoadChunk(new Vector2Int(pos.x - 1, pos.y));
+                GameObject LL = LoadChunk(new Vector2Int(pos.x - 1, pos.y + 1));
 
-                posY = (int)currentChunk.Y - chunkOffsetY;
-                // Disable chunks
-                next = registry.GetChunk(new Vector2Int(posX - 1, posY));
-                if (next) next.gameObject.SetActive(false);
-                next = registry.GetChunk(new Vector2Int(posX, posY));
-                if (next) next.gameObject.SetActive(false);
-                next = registry.GetChunk(new Vector2Int(posX + 1, posY));
-                if (next) next.gameObject.SetActive(false);
+                foreach (GameObject oldChunk in loadedChunks.ShiftLeft(TL, ML, LL))
+                    Destroy(oldChunk);
             }
-            currentChunk = current;
+
+            if (direction == Vector3.right)
+            {
+                Debug.Log("Shift RIGHT");
+                GameObject TR = LoadChunk(new Vector2Int(pos.x + 1, pos.y - 1));
+                GameObject MR = LoadChunk(new Vector2Int(pos.x + 1, pos.y));
+                GameObject LR = LoadChunk(new Vector2Int(pos.x + 1, pos.y + 1));
+
+                foreach (GameObject oldChunk in loadedChunks.ShiftRight(TR, MR, LR))
+                    Destroy(oldChunk);
+            }
+        }
+
+        private GameObject LoadChunk(Vector2Int pos)
+        {
+            Debug.Log(pos);
+            GameObject chunk = registry.GetChunk(new Vector2Int(pos.x, pos.y));
+            if (!chunk)
+                return null;
+            string coordinate = ChunkRegistry.AsCoordinate(pos.x, pos.y);
+            GameObject currentChunk = Instantiate(chunk, Vector3.zero, Quaternion.identity);
+            currentChunk.name = $"{Constants.MAP_CHUNK_INSTANCE_NAME}{coordinate}";
+
+
+            return currentChunk;
         }
 
         public static MapChunk GetChunkAt(Vector3 position)
         {
-            Vector2Int chunk = _.CalculateChunk(position);
-            return _.registry.GetChunk(chunk);
+            Vector2Int chunkPosition = _.CalculateChunk(position);
+            string coordinate = ChunkRegistry.AsCoordinate(chunkPosition.x, chunkPosition.y);
+            Debug.Log(coordinate);
+            GameObject chunk = _.loadedChunks.SearchChunk($"{Constants.MAP_CHUNK_INSTANCE_NAME}{coordinate}");
+
+            if (chunk)
+                return chunk.GetComponent<MapChunk>();
+
+            return null;
         }
 
         public Vector2Int CalculateChunk(Vector3 position)
@@ -163,109 +170,123 @@ namespace PK
             int y = Constants.MAP_CHUNK_AMOUNT - Mathf.CeilToInt(coordY);
             return new Vector2Int(x, y);
         }
-
-        /**
-        using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
-namespace FL
-{
-    public class RoomData : MonoBehaviour
-    {
-        public Vector2Int roomSize = new Vector2Int(1, 1);
-        public bool trackPosition = true;
-        public Vector2Int roomPosition = new Vector2Int(1, 1);
-
-        private Vector2Int playerOffset = new Vector2Int(-1, -1);
-        private Vector2Int previousOffset = new Vector2Int(-1, -1);
-        private Vector2 minCoords = new Vector2(0f, 0f);
-        private Vector2 lowerBounds = new Vector2(0f, 0f);
-        private Vector2 upperBounds = new Vector2(0f, 0f);
-        private Vector2 playerRelativePosition = new Vector2(0f, 0f);
-
-        private bool trackingEnabled = false;
-        private Transform player;
-
-        void Awake()
-        {
-            player = PlayerController._current.transform;
-            previousOffset = new Vector2Int(-1, -1);
-            RoomManager._current.onLoadStart += this.DisableTracking;
-            RoomManager._current.onLoadFinished += this.EnableTracking;
-            minCoords = new Vector2(-(Constants.ROOM_BOUNDS_WIDTH / 2f) * roomSize.x, (Constants.ROOM_BOUNDS_HEIGHT / 2f) * roomSize.y);
-            lowerBounds = new Vector2(-(Constants.ROOM_WIDTH / 2f) * (roomSize.x + 1), (Constants.ROOM_HEIGHT / 2f) * (roomSize.y + 1));
-            upperBounds = new Vector2((Constants.ROOM_WIDTH / 2f) * (roomSize.x + 1), -(Constants.ROOM_HEIGHT / 2f) * (roomSize.y + 1));
-            RoomManager.SetCurrentRoom(this);
-        }
-
-        
-
-        public void EnableTracking()
-        {
-            trackingEnabled = true;
-        }
-
-        public void DisableTracking()
-        {
-            RoomManager._current.onLoadFinished -= this.EnableTracking;
-            RoomManager._current.onLoadStart -= this.DisableTracking;
-            trackingEnabled = false;
-        }
-
-        // Update is called once per frame
-        void Update()
-        {
-            if (trackPosition && trackingEnabled)
-            {
-                RecalcRelativePosition();
-                RecalcOffset();
-                MapManager._current.UpdateToken(playerRelativePosition);
-                if (previousOffset != playerOffset)
-                {
-                    UpdateMapPosition();
-                    previousOffset = playerOffset;
-                }
-            }
-        }
-
-        public bool IsOutOfBounds(Vector3 point)
-        {
-            if (point.x < lowerBounds.x || point.x > upperBounds.x)
-                return true;
-            if (point.y > lowerBounds.y || point.y < upperBounds.y)
-                return true;
-            return false;
-        }
-
-        private Vector2 CalculateBounds()
-        {
-            return new Vector2(-(Constants.ROOM_WIDTH / 2f) * roomSize.x, (Constants.ROOM_HEIGHT / 2f) * roomSize.y);
-        }
-
-        private void RecalcOffset()
-        {
-            if (!player)
-                player = PlayerController._current.transform;
-            playerOffset.x = Mathf.FloorToInt((player.position.x - minCoords.x) / Constants.ROOM_BOUNDS_WIDTH);
-            playerOffset.y = Mathf.FloorToInt((minCoords.y - player.position.y) / Constants.ROOM_BOUNDS_HEIGHT);
-        }
-
-        private void RecalcRelativePosition()
-        {
-            if (!player)
-                player = PlayerController._current.transform;
-            playerRelativePosition.x = roomPosition.x + ((player.position.x - minCoords.x) / Constants.ROOM_BOUNDS_WIDTH);
-            playerRelativePosition.y = roomPosition.y + ((minCoords.y - player.position.y) / Constants.ROOM_BOUNDS_HEIGHT);
-        }
-
-        private void UpdateMapPosition()
-        {
-            Vector2Int actualPosition = new Vector2Int(roomPosition.x + playerOffset.x, roomPosition.y + playerOffset.y);
-            MapManager._current.Visit(actualPosition);
-        }
     }
-}
-*/
+
+    public class ChunkGrid
+    {
+        public GameObject topCenter;
+        public GameObject topLeft;
+        public GameObject topRight;
+        public GameObject midCenter;
+        public GameObject midLeft;
+        public GameObject midRight;
+        public GameObject lowCenter;
+        public GameObject lowLeft;
+        public GameObject lowRight;
+
+        public GameObject SearchChunk(string chunkName)
+        {
+            if (topCenter && topCenter.name == chunkName) return topCenter;
+            if (topLeft && topLeft.name == chunkName) return topLeft;
+            if (topRight && topRight.name == chunkName) return topRight;
+
+            if (midCenter && midCenter.name == chunkName) return midCenter;
+            if (midLeft && midLeft.name == chunkName) return midLeft;
+            if (midRight && midRight.name == chunkName) return midRight;
+
+            if (lowCenter && lowCenter.name == chunkName) return lowCenter;
+            if (lowLeft && lowLeft.name == chunkName) return lowLeft;
+            if (lowRight && lowRight.name == chunkName) return lowRight;
+
+            return null;
+        }
+
+        public GameObject[] ShiftUp(GameObject newTopLeft, GameObject newTopCenter, GameObject newTopRight)
+        {
+            GameObject[] moveOut = new GameObject[3];
+            moveOut.SetValue(lowLeft, 0);
+            moveOut.SetValue(lowCenter, 1);
+            moveOut.SetValue(lowRight, 2);
+
+            lowLeft = midLeft;
+            lowCenter = midCenter;
+            lowRight = midRight;
+
+            midLeft = topLeft;
+            midCenter = topCenter;
+            midRight = topRight;
+
+            topLeft = newTopLeft;
+            topCenter = newTopCenter;
+            topRight = newTopRight;
+
+            return moveOut;
+        }
+
+        public GameObject[] ShiftDown(GameObject newLowLeft, GameObject newLowCenter, GameObject newLowRight)
+        {
+            GameObject[] moveOut = new GameObject[3];
+            moveOut.SetValue(topLeft, 0);
+            moveOut.SetValue(topCenter, 1);
+            moveOut.SetValue(topRight, 2);
+
+            topLeft = midLeft;
+            topCenter = midCenter;
+            topRight = midRight;
+
+            midLeft = lowLeft;
+            midCenter = lowCenter;
+            midRight = lowRight;
+
+            lowLeft = newLowLeft;
+            lowCenter = newLowCenter;
+            lowRight = newLowRight;
+
+            return moveOut;
+        }
+
+        public GameObject[] ShiftRight(GameObject newTopRight, GameObject newMidRight, GameObject newLowRight)
+        {
+            GameObject[] moveOut = new GameObject[3];
+            moveOut.SetValue(topLeft, 0);
+            moveOut.SetValue(midLeft, 1);
+            moveOut.SetValue(lowLeft, 2);
+
+            topLeft = topCenter;
+            midLeft = midCenter;
+            lowLeft = lowCenter;
+
+            topCenter = topRight;
+            midCenter = midRight;
+            lowCenter = lowRight;
+
+            topRight = newTopRight;
+            midRight = newMidRight;
+            lowRight = newLowRight;
+
+            return moveOut;
+        }
+
+        public GameObject[] ShiftLeft(GameObject newTopLeft, GameObject newMidLeft, GameObject newLowLeft)
+        {
+            GameObject[] moveOut = new GameObject[3];
+            moveOut.SetValue(topRight, 0);
+            moveOut.SetValue(midRight, 1);
+            moveOut.SetValue(lowRight, 2);
+
+            topRight = topCenter;
+            midRight = midCenter;
+            lowRight = lowCenter;
+
+            topCenter = topLeft;
+            midCenter = midLeft;
+            lowCenter = lowLeft;
+
+            topLeft = newTopLeft;
+            midLeft = newMidLeft;
+            lowLeft = newLowLeft;
+
+            return moveOut;
+        }
     }
 }

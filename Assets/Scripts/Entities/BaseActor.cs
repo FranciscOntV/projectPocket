@@ -33,8 +33,8 @@ namespace PK
             animationTimer.onFinish += NextStep;
             animationTimer.Start();
             targetPosition = transform.position;
+            MapChunkManager._.LoadAllChunks(transform.position);
             currentChunk = MapChunkManager.GetChunkAt(transform.position);
-            MapChunkManager._.ActivateAdjacentChunks(currentChunk);
         }
 
         // Update is called once per frame
@@ -149,7 +149,7 @@ namespace PK
             if (!blocked && chunk != currentChunk)
             {
                 currentChunk = chunk;
-                MapChunkManager._.ActivateAdjacentChunks(currentChunk);
+                MapChunkManager._.PerformShift(position, position - transform.position);
             }
 
             return blocked;

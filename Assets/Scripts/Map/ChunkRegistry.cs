@@ -6,39 +6,60 @@ namespace PK
 {
     public class ChunkRegistry : MonoBehaviour
     {
-        public MapChunk defaultChunk;
-        public MapChunk[] mapChunks;
-        private Dictionary<string, MapChunk> registeredChunks = new Dictionary<string, MapChunk>();
+        public GameObject defaultChunk;
+        public GameObject[] mapChunks;
+        private Dictionary<string, GameObject> registeredChunks = new Dictionary<string, GameObject>();
 
         void Awake()
         {
-            foreach (MapChunk chunk in mapChunks)
+            foreach (GameObject chunk in mapChunks)
             {
-                Register(chunk);
+                if (chunk)
+                    Register(chunk);
             }
         }
 
-        public MapChunk GetChunk(Vector2Int coord)
+        public MapChunk GetChunkData(Vector2Int coord)
         {
             string entry = AsCoordinate(coord.x, coord.y);
-            MapChunk chunk = null;
+            GameObject chunk = null;
+            MapChunk chunkData = null;
             if (registeredChunks.ContainsKey(entry))
             {
                 chunk = registeredChunks[entry];
+                chunkData = chunk.GetComponent<MapChunk>();
             }
             else
             {
                 Debug.LogWarning($"Chunk for {coord.x}{coord.y} was not found!");
             }
 
+            return chunkData;
+        }
+
+        public GameObject GetChunk(Vector2Int coord)
+        {
+            string entry = AsCoordinate(coord.x, coord.y);
+            GameObject chunk = null;
+            if (registeredChunks.ContainsKey(entry))
+            {
+                chunk = registeredChunks[entry];
+            }
+            else
+            {
+                Debug.LogWarning($"Chunk for {entry} was not found!");
+            }
+
             return chunk;
         }
 
-        private void Register(MapChunk chunk)
+        private void Register(GameObject chunk)
         {
-            if (!chunk)
+            MapChunk chunkData = chunk.GetComponent<MapChunk>();
+            if (!chunkData)
                 return;
-            string entry = $"{chunk.X.ToString()}{chunk.Y.ToString()}";
+
+            string entry = $"{chunkData.X.ToString()}{chunkData.Y.ToString()}";
             if (registeredChunks.ContainsKey(entry))
             {
                 Debug.LogWarning($"A duplicated registry for {entry} was intended.");
@@ -46,11 +67,10 @@ namespace PK
             else
             {
                 registeredChunks.Add(entry, chunk);
-                chunk.gameObject.SetActive(false);
             }
         }
 
-        private string AsCoordinate(int x, int y)
+        public static string AsCoordinate(int x, int y)
         {
             if (x > 26 || y > 26 || x < 0 || y < 0)
                 return Constants.MAP_CHUNK_UNDEFINED;
