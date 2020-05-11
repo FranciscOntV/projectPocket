@@ -10,35 +10,34 @@ namespace PK
         public bool moving = false;
 
         [SerializeField]
-        private ActorSprite sprites;
+        protected ActorSprite sprites;
         private SpriteRenderer sprite;
         [SerializeField]
-        private WalkingSpeed walkSpeed = WalkingSpeed.Normal;
+        protected WalkingSpeed walkSpeed = WalkingSpeed.Normal;
         public Facing facing = Facing.Down;
         [SerializeField]
-        private Speed animationSpeed = Speed.Normal;
+        protected Speed animationSpeed = Speed.Normal;
         private Timer animationTimer = new Timer(1f);
         private int step = 1;
         private bool stepping = false;
 
         // Movement Vars
-        private MapChunk currentChunk;
-        private Vector3 targetPosition;
-        private bool stopAnimation = false;
-        private bool canMove = true;
+        protected MapChunk currentChunk;
+        protected Vector3 targetPosition;
+        protected bool stopAnimation = false;
+        protected bool canMove = true;
 
-        private void Awake()
+        public void Awake()
         {
-            sprite = GetComponent<SpriteRenderer>();
+            sprite = GetComponentInChildren<SpriteRenderer>();
             animationTimer.onFinish += NextStep;
             animationTimer.Start();
             targetPosition = transform.position;
-            MapChunkManager._.LoadAllChunks(transform.position);
             currentChunk = MapChunkManager.GetChunkAt(transform.position);
         }
 
         // Update is called once per frame
-        void Update()
+        public void Update()
         {
             if (moving)
                 animationTimer.Update(Time.deltaTime * (float)animationSpeed * Constants.ANIMATION_SPEED_MULTIPLIER);
@@ -135,27 +134,22 @@ namespace PK
             stopAnimation = true;
         }
 
-        private bool DestinationBlocked(Vector3 position)
+        protected virtual bool DestinationBlocked(Vector3 position)
         {
             bool blocked = false;
-            MapChunk chunk = MapChunkManager.GetChunkAt(position);
-            if (!chunk)
-                return true;
-            Vector3Int tilePosition = chunk.permissionLayer.WorldToCell(position);
-            TileBase tile = chunk.permissionLayer.GetTile(tilePosition);
 
-            blocked = tile.name != Constants.TILE_PERMISSION_WALKABLE;
+            Vector3Int tilePosition = currentChunk.permissionLayer.WorldToCell(position);
+            TileBase tile = currentChunk.permissionLayer.GetTile(tilePosition);
 
-            if (!blocked && chunk != currentChunk)
-            {
-                currentChunk = chunk;
-                MapChunkManager._.PerformShift(position, position - transform.position);
-            }
+            if (!tile)
+                return false;
+
+            blocked = (tile.name != Constants.TILE_PERMISSION_WALKABLE || tile.name != Constants.TILE_PERMISSION_ABOVE_LEVEL);
 
             return blocked;
         }
 
-        private IEnumerator PerformMovement()
+        protected IEnumerator PerformMovement()
         {
             canMove = false;
             moving = true;

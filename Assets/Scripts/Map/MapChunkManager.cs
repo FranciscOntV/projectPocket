@@ -92,7 +92,6 @@ namespace PK
             Vector2Int pos = _.CalculateChunk(position);
             if (direction == Vector3.up)
             {
-                Debug.Log("Shift UP");
                 GameObject TL = LoadChunk(new Vector2Int(pos.x - 1, pos.y - 1));
                 GameObject TC = LoadChunk(new Vector2Int(pos.x, pos.y - 1));
                 GameObject TR = LoadChunk(new Vector2Int(pos.x + 1, pos.y - 1));
@@ -103,7 +102,6 @@ namespace PK
 
             if (direction == Vector3.down)
             {
-                Debug.Log("Shift DOWN");
                 GameObject LL = LoadChunk(new Vector2Int(pos.x - 1, pos.y + 1));
                 GameObject LC = LoadChunk(new Vector2Int(pos.x, pos.y + 1));
                 GameObject LR = LoadChunk(new Vector2Int(pos.x + 1, pos.y + 1));
@@ -114,7 +112,6 @@ namespace PK
 
             if (direction == Vector3.left)
             {
-                Debug.Log("Shift LEFT");
                 GameObject TL = LoadChunk(new Vector2Int(pos.x - 1, pos.y - 1));
                 GameObject ML = LoadChunk(new Vector2Int(pos.x - 1, pos.y));
                 GameObject LL = LoadChunk(new Vector2Int(pos.x - 1, pos.y + 1));
@@ -125,7 +122,6 @@ namespace PK
 
             if (direction == Vector3.right)
             {
-                Debug.Log("Shift RIGHT");
                 GameObject TR = LoadChunk(new Vector2Int(pos.x + 1, pos.y - 1));
                 GameObject MR = LoadChunk(new Vector2Int(pos.x + 1, pos.y));
                 GameObject LR = LoadChunk(new Vector2Int(pos.x + 1, pos.y + 1));
@@ -137,7 +133,6 @@ namespace PK
 
         private GameObject LoadChunk(Vector2Int pos)
         {
-            Debug.Log(pos);
             GameObject chunk = registry.GetChunk(new Vector2Int(pos.x, pos.y));
             if (!chunk)
                 return null;
@@ -153,7 +148,6 @@ namespace PK
         {
             Vector2Int chunkPosition = _.CalculateChunk(position);
             string coordinate = ChunkRegistry.AsCoordinate(chunkPosition.x, chunkPosition.y);
-            Debug.Log(coordinate);
             GameObject chunk = _.loadedChunks.SearchChunk($"{Constants.MAP_CHUNK_INSTANCE_NAME}{coordinate}");
 
             if (chunk)

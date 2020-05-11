@@ -79,6 +79,16 @@ namespace PK
 
         public const string TILE_PERMISSION_NONE  = "tilePermission_0";
         public const string TILE_PERMISSION_WALKABLE  = "tilePermission_1";
+        public const string TILE_PERMISSION_WATER  = "tilePermission_3";
+        public const string TILE_PERMISSION_LEVEL_SHIFT  = "tilePermission_4";
+        public const string TILE_PERMISSION_ABOVE_LEVEL  = "tilePermission_5";
+        public const string TILE_PERMISSION_JUMP_LEFT  = "tilePermission_8";
+        public const string TILE_PERMISSION_JUMP_RIGHT  = "tilePermission_9";
+        public const string TILE_PERMISSION_JUMP_UP  = "tilePermission_10";
+        public const string TILE_PERMISSION_JUMP_DOWN  = "tilePermission_11";
+
+        public const string ANIMATOR_JUMP_KEY = "JUMP";
+
 
         public const string MAP_CHUNK_INSTANCE_NAME = "Chunk-";
     }

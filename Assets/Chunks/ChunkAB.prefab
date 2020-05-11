@@ -2494,8 +2494,8 @@ Tilemap:
   - first: {x: 4, y: 18, z: 0}
     second:
       serializedVersion: 2
-      m_TileIndex: 0
-      m_TileSpriteIndex: 0
+      m_TileIndex: 2
+      m_TileSpriteIndex: 2
       m_TileMatrixIndex: 0
       m_TileColorIndex: 0
       m_TileObjectToInstantiateIndex: 65535
@@ -2503,8 +2503,8 @@ Tilemap:
   - first: {x: 5, y: 18, z: 0}
     second:
       serializedVersion: 2
-      m_TileIndex: 0
-      m_TileSpriteIndex: 0
+      m_TileIndex: 2
+      m_TileSpriteIndex: 2
       m_TileMatrixIndex: 0
       m_TileColorIndex: 0
       m_TileObjectToInstantiateIndex: 65535
@@ -2512,8 +2512,8 @@ Tilemap:
   - first: {x: 6, y: 18, z: 0}
     second:
       serializedVersion: 2
-      m_TileIndex: 0
-      m_TileSpriteIndex: 0
+      m_TileIndex: 2
+      m_TileSpriteIndex: 2
       m_TileMatrixIndex: 0
       m_TileColorIndex: 0
       m_TileObjectToInstantiateIndex: 65535
@@ -2539,8 +2539,8 @@ Tilemap:
   - first: {x: 9, y: 18, z: 0}
     second:
       serializedVersion: 2
-      m_TileIndex: 0
-      m_TileSpriteIndex: 0
+      m_TileIndex: 2
+      m_TileSpriteIndex: 2
       m_TileMatrixIndex: 0
       m_TileColorIndex: 0
       m_TileObjectToInstantiateIndex: 65535
@@ -2637,17 +2637,21 @@ Tilemap:
       m_AllTileFlags: 1073741825
   m_AnimatedTiles: {}
   m_TileAssetArray:
-  - m_RefCount: 73
+  - m_RefCount: 69
     m_Data: {fileID: 11400000, guid: 49d0edd536fd34b26acb73d6ff664064, type: 2}
   - m_RefCount: 27
     m_Data: {fileID: 11400000, guid: 0b525f8f9acaa4af1a3f6bd827a77555, type: 2}
+  - m_RefCount: 4
+    m_Data: {fileID: 11400000, guid: 6e0ebc8bce7af4ee1ba46c4bfe2ef3b6, type: 2}
   m_TileSpriteArray:
-  - m_RefCount: 73
+  - m_RefCount: 69
     m_Data: {fileID: -4064553724474489437, guid: a9f7714e2f71a4b7cb8fa0f55091f5f5,
       type: 3}
   - m_RefCount: 27
     m_Data: {fileID: 6629269484368338889, guid: a9f7714e2f71a4b7cb8fa0f55091f5f5,
       type: 3}
+  - m_RefCount: 4
+    m_Data: {fileID: 486963621316897368, guid: a9f7714e2f71a4b7cb8fa0f55091f5f5, type: 3}
   m_TileMatrixArray:
   - m_RefCount: 100
     m_Data:
